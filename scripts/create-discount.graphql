@@ -1,0 +1,25 @@
+# Run once per store in the GraphiQL explorer that `shopify app dev` opens (press "g").
+# It must run as the app so the "$app:" metafield namespace resolves to the app's own namespace.
+# Keep percentage/minItems in sync with the "Outfit discount" settings on the theme block.
+mutation CreateOutfitDiscount {
+  discountAutomaticAppCreate(
+    automaticAppDiscount: {
+      title: "Outfit bundle"
+      functionHandle: "outfit-discount"
+      discountClasses: [PRODUCT]
+      startsAt: "2026-01-01T00:00:00Z"
+      combinesWith: { orderDiscounts: false, productDiscounts: false, shippingDiscounts: true }
+      metafields: [
+        {
+          namespace: "$app:outfit-builder"
+          key: "function-configuration"
+          type: "json"
+          value: "{\"percentage\":10,\"minItems\":2}"
+        }
+      ]
+    }
+  ) {
+    automaticAppDiscount { discountId title status }
+    userErrors { field message }
+  }
+}

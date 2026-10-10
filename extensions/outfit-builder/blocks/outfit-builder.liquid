@@ -1,0 +1,99 @@
+{%- liquid
+  assign s = block.settings
+  assign limit = s.max_products
+  assign slot_settings = 'top:top_collection,bottom:bottom_collection,shoes:shoes_collection,onepiece:onepiece_collection' | split: ','
+  assign string_keys = 'top,bottom,shoes,onepiece,separates,dress,prev,next,add_back,get_look,your_look,add,adding,close,added,choose_size,sold_out,unavailable,empty,unlock,unlocked,save,saved,share,shuffle,style_me,looks_for_you,more_looks,remove,saved_looks,no_saved,load,link_copied,share_text,no_products' | split: ','
+  assign checkout_url = routes.root_url | append: '/checkout' | replace: '//', '/'
+-%}
+<div
+  class="ob-root"
+  id="outfit-builder-{{ block.id }}"
+  data-outfit-builder
+  {{ block.shopify_attributes }}
+  style="--ob-accent: {{ s.accent_color }}; --ob-accent-text: {{ s.accent_text_color }}; --ob-radius: {{ s.radius }}px; --ob-tile-bg: {{ s.tile_background }};"
+>
+  {%- if s.heading != blank -%}
+    <h2 class="ob-heading">{{ s.heading | escape }}</h2>
+  {%- endif -%}
+  <div class="ob-mount">
+    <p class="ob-loading">{{ 'outfit_builder.loading' | t }}</p>
+  </div>
+  <noscript>{{ 'outfit_builder.noscript' | t }}</noscript>
+  <script type="application/json" data-ob-config>
+    {
+      "shop": {{ shop.permanent_domain | json }},
+      "moneyFormat": {{ shop.money_format | json }},
+      "cartAddUrl": {{ routes.cart_add_url | append: '.js' | json }},
+      "cartUrl": {{ routes.cart_url | json }},
+      "checkoutUrl": {{ checkout_url | json }},
+      "afterAdd": {{ s.after_add | json }},
+      "discountPercent": {{ s.discount_percent | default: 0 }},
+      "minItems": {{ s.min_items | default: 2 }},
+      "strings": {
+        {%- for key in string_keys -%}
+          {{ key | json }}: {{ 'outfit_builder.' | append: key | t | json }}{%- unless forloop.last -%},{%- endunless -%}
+        {%- endfor -%}
+      },
+      {%- if s.top_collection != blank or s.bottom_collection != blank or s.shoes_collection != blank or s.onepiece_collection != blank -%}
+      "lists": {
+        {%- for pair in slot_settings -%}
+          {%- assign parts = pair | split: ':' -%}
+          {%- assign collection = s[parts[1]] -%}
+          {{ parts[0] | json }}: [
+            {%- if collection != blank -%}
+              {%- for product in collection.products limit: limit -%}
+                {%- render 'ob-product', product: product -%}{%- unless forloop.last -%},{%- endunless -%}
+              {%- endfor -%}
+            {%- endif -%}
+          ]{%- unless forloop.last -%},{%- endunless -%}
+        {%- endfor -%}
+      }
+      {%- else -%}
+      {%- assign catalog = s.catalog_collection | default: collections.all -%}
+      "products": [
+        {%- for product in catalog.products limit: limit -%}
+          {%- render 'ob-product', product: product -%}{%- unless forloop.last -%},{%- endunless -%}
+        {%- endfor -%}
+      ]
+      {%- endif -%}
+    }
+  </script>
+</div>
+
+{% schema %}
+{
+  "name": "Outfit builder",
+  "target": "section",
+  "stylesheet": "outfit-builder.css",
+  "javascript": "outfit-builder.js",
+  "settings": [
+    { "type": "text", "id": "heading", "label": "Heading", "info": "Optional. Leave empty for a full-screen builder." },
+    { "type": "header", "content": "Products" },
+    { "type": "paragraph", "content": "Pick one collection per category, or leave them all empty and choose a catalog collection to sort automatically by product type, tags and title. Tag a product outfit:top, outfit:bottom, outfit:shoes, outfit:onepiece or outfit:exclude to override." },
+    { "type": "collection", "id": "top_collection", "label": "Tops collection" },
+    { "type": "collection", "id": "bottom_collection", "label": "Bottoms collection" },
+    { "type": "collection", "id": "shoes_collection", "label": "Shoes collection" },
+    { "type": "collection", "id": "onepiece_collection", "label": "Dresses & one-pieces collection", "info": "Optional. A one-piece replaces the top and bottom." },
+    { "type": "collection", "id": "catalog_collection", "label": "Catalog collection (automatic sorting)", "info": "Used only when no category collections are set. Defaults to all products." },
+    { "type": "range", "id": "max_products", "label": "Products per collection", "min": 10, "max": 50, "step": 5, "default": 50 },
+    { "type": "header", "content": "Outfit discount" },
+    { "type": "paragraph", "content": "Shown to shoppers here. Keep it in sync with the \"Outfit bundle\" automatic discount, which applies it at checkout." },
+    { "type": "range", "id": "discount_percent", "label": "Discount", "min": 0, "max": 50, "step": 1, "unit": "%", "default": 0 },
+    { "type": "range", "id": "min_items", "label": "Minimum items in outfit", "min": 2, "max": 3, "step": 1, "default": 2 },
+    { "type": "header", "content": "Behaviour" },
+    {
+      "type": "select", "id": "after_add", "label": "After adding to cart", "default": "cart",
+      "options": [
+        { "value": "cart", "label": "Go to cart" },
+        { "value": "checkout", "label": "Go to checkout" },
+        { "value": "stay", "label": "Stay on page" }
+      ]
+    },
+    { "type": "header", "content": "Style" },
+    { "type": "color", "id": "accent_color", "label": "Button color", "default": "#111111" },
+    { "type": "color", "id": "accent_text_color", "label": "Button text color", "default": "#ffffff" },
+    { "type": "color", "id": "tile_background", "label": "Image background", "default": "#f4f4f2" },
+    { "type": "range", "id": "radius", "label": "Corner radius", "min": 0, "max": 24, "step": 2, "unit": "px", "default": 8 }
+  ]
+}
+{% endschema %}

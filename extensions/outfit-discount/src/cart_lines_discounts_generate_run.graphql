@@ -1,0 +1,17 @@
+query CartInput {
+  cart {
+    lines {
+      id
+      quantity
+      outfit: attribute(key: "_outfit") {
+        value
+      }
+    }
+  }
+  discount {
+    discountClasses
+    metafield(namespace: "$app:outfit-builder", key: "function-configuration") {
+      jsonValue
+    }
+  }
+}

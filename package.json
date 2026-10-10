@@ -1,0 +1,23 @@
+{
+  "name": "virtual-outfit-builder",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "extensions/*"
+  ],
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "node scripts/build.mjs && node dev/server.mjs",
+    "test": "vitest run",
+    "e2e": "node scripts/build.mjs && node test/e2e.mjs",
+    "shopify": "shopify",
+    "deploy": "npm run build && shopify app deploy"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "liquidjs": "10.30.0",
+    "playwright-core": "1.64.0",
+    "vitest": "5.0.3"
+  }
+}
